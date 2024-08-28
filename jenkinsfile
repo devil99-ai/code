@@ -1,0 +1,57 @@
+pipeline {
+    agent any
+
+    tools {
+        maven 'Maven 3.8.4' // Specify the Maven version installed on your Jenkins server
+        jdk 'JDK 21' // Specify the JDK version installed on your Jenkins server
+    }
+
+    environment {
+        GIT_CREDENTIALS_ID = 'devil99-ai' // Replace with your Jenkins Git credentials ID
+        GITHUB_REPO = 'https://github.com/devil99-ai/simplilearn.git' // Replace with your GitHub repository URL
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', credentialsId: "${GIT_CREDENTIALS_ID}", url: "${GITHUB_REPO}"
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'mvn clean install'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'mvn test'
+            }
+        }
+
+        stage('Package') {
+            steps {
+                sh 'mvn package'
+            }
+        }
+
+        stage('Push to GitHub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: "${GIT_CREDENTIALS_ID}", passwordVariable: 'Saswati99@', usernameVariable: 'devil99-ai')]) {
+                    sh 'git config user.email "svkshrm@gmail.com"'
+                    sh 'git config user.name "Souvik"'
+                    sh 'git add .'
+                    sh 'git commit -m "Automated build and test commit"'
+                    sh 'git push https://${GIT_USERNAME}:${GIT_PASSWORD}@${GITHUB_REPO} main'
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
